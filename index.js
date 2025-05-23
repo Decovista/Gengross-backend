@@ -33,12 +33,13 @@ if (!spreadsheetId) {
 
 let auth;
 try {
-  auth = new google.auth.JWT(
-    credentials.client_email,
-    null,
-    credentials.private_key,
-    ["https://www.googleapis.com/auth/spreadsheets"]
-  );
+ auth = new google.auth.JWT(
+  process.env.CLIENT_EMAIL,
+  null,
+  process.env.PRIVATE_KEY.replace(/\\n/g, '\n'),
+  ["https://www.googleapis.com/auth/spreadsheets"]
+);
+
   console.log("✅ Google JWT client created.");
 } catch (err) {
   console.error("❌ Error creating Google JWT client:", err.message);
