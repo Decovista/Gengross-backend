@@ -7,29 +7,31 @@ const cors = require("cors");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const corsOptions = {
-  origin: ["http://localhost:5173", "https://gengross.netlify.app"],
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
-  credentials: true,
-};
 
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); 
+const allowedOrigins = [
+  "http://localhost:5173",     
+  "https://gengross.vercel.app/", 
+];
+
+app.use(cors({
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
+  },
+  methods: ["GET", "POST"],
+  credentials: true,
+}));
 
 app.use(bodyParser.json());
 
 
-const serviceAccount = JSON.parse(process.env.GOOGLE_SERVICE_ACCOUNT);
-
-
-serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
-
+const privateKey = process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, "\n");
 
 const auth = new google.auth.JWT(
-  serviceAccount.client_email,
+  process.env.GOOGLE_CLIENT_EMAIL,
   null,
-  serviceAccount.private_key,
+  privateKey,
   ["https://www.googleapis.com/auth/spreadsheets"]
 );
 
@@ -37,7 +39,6 @@ const sheets = google.sheets({ version: "v4", auth });
 
 const spreadsheetId = process.env.SPREADSHEET_ID;
 const sheetName = "Sheet1";
-
 
 app.post("/api/contact", async (req, res) => {
   const {
@@ -79,7 +80,6 @@ app.post("/api/contact", async (req, res) => {
   }
 });
 
-
 app.listen(PORT, () => {
-  console.log(`🚀 Server running at http://localhost:${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });
