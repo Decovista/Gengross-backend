@@ -2,8 +2,27 @@
   "dependencies": {
     "body-parser": "^2.2.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.5.0",
+    "dotenv": "^16.6.0",
     "express": "^5.1.0",
-    "googleapis": "^149.0.0"
-  }
+    "googleapis": "^149.0.0",
+    "xlsx": "^0.18.5"
+  },
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "��#\u0000 \u0000G\u0000e\u0000n\u0000g\u0000r\u0000o\u0000s\u0000s\u0000-\u0000b\u0000a\u0000c\u0000k\u0000e\u0000n\u0000d\u0000\r\u0000 \u0000",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Decovista/Gengross-backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Decovista/Gengross-backend/issues"
+  },
+  "homepage": "https://github.com/Decovista/Gengross-backend#readme"
 }
