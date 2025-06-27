@@ -1,30 +1,36 @@
 require("dotenv").config();
 const express = require("express");
 const { google } = require("googleapis");
-const bodyParser = require("body-parser");
 const cors = require("cors");
+const bodyParser = require("body-parser");
 
 const app = express();
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5000;
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// Fix private key line breaks for Google JWT auth
-const privateKey = process.env.GOOGLE_SERVICE_ACCOUNT.replace(/\\n/g, "\n");
+const { SPREADSHEET_ID, GOOGLE_SERVICE_ACCOUNT } = process.env;
 
-const auth = new google.auth.JWT(
-  process.env.GOOGLE_CLIENT_EMAIL,
+let parsedCredentials;
+
+try {
+  parsedCredentials = JSON.parse(GOOGLE_SERVICE_ACCOUNT);
+} catch (error) {
+  console.error("❌ Failed to parse GOOGLE_SERVICE_ACCOUNT JSON:", error.message);
+  process.exit(1);
+}
+
+const jwtClient = new google.auth.JWT(
+  parsedCredentials.client_email,
   null,
-  privateKey,
+  parsedCredentials.private_key.replace(/\\n/g, '\n'),
   ["https://www.googleapis.com/auth/spreadsheets"]
 );
 
-const sheets = google.sheets({ version: "v4", auth });
+const sheets = google.sheets({ version: "v4", auth: jwtClient });
 
-const spreadsheetId = process.env.SPREADSHEET_ID;
-const sheetName = "Sheet1";
-
+// === Contact Form Handler ===
 app.post("/api/contact", async (req, res) => {
   const {
     name,
@@ -37,34 +43,36 @@ app.post("/api/contact", async (req, res) => {
     quantity,
   } = req.body;
 
-  try {
-    const values = [
-      [
-        name,
-        email,
-        phone,
-        product,
-        location === "Other" ? other_location : location,
-        preferred_time,
-        quantity,
-        new Date().toLocaleString(),
-      ],
-    ];
+  const finalLocation = location === "Other" ? other_location : location;
 
+  const values = [
+    [
+      name,
+      email,
+      phone,
+      product,
+      finalLocation,
+      preferred_time,
+      quantity,
+      new Date().toLocaleString(),
+    ],
+  ];
+
+  try {
     await sheets.spreadsheets.values.append({
-      spreadsheetId,
-      range: `${sheetName}!A1`,
+      spreadsheetId: SPREADSHEET_ID,
+      range: "Sheet1!A1",
       valueInputOption: "USER_ENTERED",
       resource: { values },
     });
 
-    res.status(200).json({ success: true, message: "Data added to sheet." });
+    res.status(200).json({ success: true, message: " Contact saved successfully." });
   } catch (error) {
-    console.error("Error appending data to Google Sheet:", error);
-    res.status(500).json({ error: "Failed to store data in Google Sheet." });
+    console.error(" Google Sheets Error:", error.response?.data || error.message);
+    res.status(500).json({ error: " Failed to save contact data." });
   }
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(` Backend running on port ${PORT}`);
 });
